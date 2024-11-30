@@ -1,6 +1,6 @@
 {
-  "name": "event-backend",
-  "version": "1.0.0",
+  "name": "event-details",
+  "version": "1.0.1",
   "description": "",
   "main": "index.js",
   "scripts": {

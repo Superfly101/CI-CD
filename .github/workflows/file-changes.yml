@@ -18,7 +18,7 @@ jobs:
         id: changed-files-specific
         uses: tj-actions/changed-files@v45
         with:
-          files: |
+          files_yaml: |
             event-details:
               - 'plugins/event-details/package.json'
               - plugins/event-details/src/**
