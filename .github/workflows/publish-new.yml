@@ -77,5 +77,5 @@ jobs:
 
       - name: Debug Output
         run: |
-        echo "Matrix plugin: ${{ matrix.plugin }}"
-        echo "Changed files output: ${{ needs.changed_files.outputs[matrix.plugin] }}"
+          echo "Matrix plugin: ${{ matrix.plugin }}"
+          echo "Changed files output: ${{ needs.changed_files.outputs[matrix.plugin] }}"
