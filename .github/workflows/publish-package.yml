@@ -60,7 +60,7 @@ jobs:
       #   run: yarn backstage-cli repo build
 
       - name: Publish changed packages in parallel
-      needs: changed_files
+        needs: changed_files
         run: |
           # Array to store background process PIDs
           pids=()
