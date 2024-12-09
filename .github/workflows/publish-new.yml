@@ -1,0 +1,76 @@
+name: Publish packages to GitHub Packages
+
+on:
+  push:
+    branches: [main]
+
+env:
+  NODE_VERSION: 18.x
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
+
+      - name: Install yarn 2
+        run: npm install -g yarn@berry
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Build type declarations
+        run: yarn tsc
+
+      - name: Build packages
+        run: yarn backstage-cli repo build
+
+  changed_files:
+    runs-on: ubuntu-latest
+    outputs:
+      event-details: ${{ steps.changed-plugins-files.outputs.details_any_changed }}
+      event-backend: ${{ steps.changed-plugins-files.outputs.kind-backend_any_changed }}
+
+    name: Test changed-files
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get all changed plugins files
+        id: changed-plugins-files
+        uses: tj-actions/changed-files@v45
+        with:
+          files_yaml: |
+            details:
+                - plugins/event-details/src/**
+                - 'plugins/event-details/package.json'
+            kind-backend:
+                - plugins/event-kind-backend/src/**
+                - 'plugins/event-kind-backend/package.json'
+
+  publish:
+    needs: [setup, changed_files]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        plugin: [event-details, event-kind-backend]
+    steps:
+      - name: Publish package
+        if: ${{ needs.changed_files.outputs[matrix.plugin + '_changed'] == 'true' }}
+        run: |
+          PACKAGE_NAME=$(jq -r ".name" plugins/${{ matrix.plugin }}/package.json)
+          echo "${{ matrix.plugin }}"
+          echo "Publishing $PACKAGE_NAME"
+          # yarn workspace $PACKAGE_NAME npm publish
+        env:
+          YARN_NPM_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

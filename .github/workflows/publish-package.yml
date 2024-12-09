@@ -42,24 +42,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # - name: Use Node.js ${{ env.NODE_VERSION }}
-      #   uses: actions/setup-node@v4
-      #   with:
-      #     node-version: ${{ env.NODE_VERSION }}
-      #     cache: yarn
-
-      # - name: Install yarn 2
-      #   run: npm install -g yarn@berry
-
-      # - name: Install dependencies
-      #   run: yarn install --immutable
-
-      # - name: Build type declarations
-      #   run: yarn tsc
-
-      # - name: Build packages
-      #   run: yarn backstage-cli repo build
-
       - name: Publish changed packages in parallel
         run: |
           # Array to store background process PIDs
@@ -75,6 +57,7 @@ jobs:
                 exit 0
               fi
               
+              PACKAGE_NAME=$(jq -r ".name" plugins/$plugin/package.json)
               echo "Publishing $plugin"
               # yarn workspace $PACKAGE_NAME npm publish
             ) &
