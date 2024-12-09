@@ -1,4 +1,4 @@
-name: New Publish packages to GitHub Packages
+name: Publish packages to GitHub Packages
 
 on:
   push:
@@ -67,10 +67,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Publish package
-        # if: needs.changed_files.outputs[format('{0}', matrix.plugin)] == 'true'
+        if: ${{ needs.changed_files.outputs[matrix.plugin] == 'true' }}
         run: |
           PACKAGE_NAME=$(jq -r ".name" plugins/${{ matrix.plugin }}/package.json)
           echo "Publishing $PACKAGE_NAME"
           # yarn workspace $PACKAGE_NAME npm publish
         env:
           YARN_NPM_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Debug Output
+        run: |
+        echo "Matrix plugin: ${{ matrix.plugin }}"
+        echo "Changed files output: ${{ needs.changed_files.outputs[matrix.plugin] }}"
