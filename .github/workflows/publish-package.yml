@@ -1,0 +1,94 @@
+name: Publish packages to GitHub Packages
+
+on:
+  push:
+    branches: [feature/3582-Backstage-GitHubActions]
+
+env:
+  NODE_VERSION: 18.x
+  PARALLEL_PUBLISH_JOBS: 10
+
+jobs:
+  changed_files:
+    runs-on: ubuntu-latest
+    outputs:
+      event-details: ${{ steps.changed-plugins-files.outputs.details_any_changed }}
+      event-backend: ${{ steps.changed-plugins-files.outputs.kind-backend_any_changed }}
+      catalog-filters: ${{ steps.changed-plugins-files.outputs.kind-backend_any_changed }}
+      catalog-table: ${{ steps.changed-plugins-files.outputs.kind-backend_any_changed }}
+
+    name: Test changed-files
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # OR "2" -> To retrieve the preceding commit.
+
+      - name: Get all changed plugins files
+        id: changed-plugins-files
+        uses: tj-actions/changed-files@v45
+        with:
+          files_yaml: |
+            details:
+                - plugins/event-details/src/**
+                - 'plugins/event-details/package.json'
+            kind-backend:
+                - plugins/event-kind-backend/src/**
+                - 'plugins/event-kind-backend/package.json'
+
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
+
+      - name: Install yarn 2
+        run: npm install -g yarn@berry
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Build type declarations
+        run: yarn tsc
+
+      - name: Build packages
+        run: yarn backstage-cli repo build
+
+      - name: Publish changed packages in parallel
+        run: |
+          # Array to store background process PIDs
+          pids=()
+          failed=0
+
+          for plugin in event-details event-kind-backend; do
+            (
+              CHANGE_FLAG=$(echo "$plugin" | tr '-' '_' | tr 'a-z' 'A-Z')_CHANGED 
+
+              if [ "${!CHANGE_FLAG}" != 'true' ]; then
+                echo "$plugin has no changes, skipping publish."
+                exit 0
+              fi
+              
+              yarn workspace $PACKAGE_NAME npm publish
+            ) &
+            
+            pids+=($!)
+          done
+
+          # Wait for all processes and set failed=1 if any fail
+          for pid in "${pids[@]}"; do
+            wait $pid || failed=1
+          done
+
+          exit $failed
+        env:
+          YARN_NPM_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EVENT_DETAILS_CHANGED: ${{ needs.changed_files.outputs.event-details }}
+          EVENT_KIND_BACKEND_CHANGED: ${{ needs.changed_files.outputs.event-backend }}
