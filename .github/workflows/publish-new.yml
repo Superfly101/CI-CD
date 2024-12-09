@@ -66,10 +66,9 @@ jobs:
         plugin: [event-details, event-kind-backend]
     steps:
       - name: Publish package
-        if: ${{ needs.changed_files.outputs[matrix.plugin + '_changed'] == 'true' }}
+        if: ${{ format('needs.changed_files.outputs.{0}_changed', matrix.plugin) == 'true' }}
         run: |
           PACKAGE_NAME=$(jq -r ".name" plugins/${{ matrix.plugin }}/package.json)
-          echo "${{ matrix.plugin }}"
           echo "Publishing $PACKAGE_NAME"
           # yarn workspace $PACKAGE_NAME npm publish
         env:
