@@ -9,27 +9,24 @@ env:
 
 jobs:
   setup:
+    needs: [changed_files]
     runs-on: ubuntu-latest
+    if: ${{ needs.changed_files.outputs['event-details'] == 'true' || needs.changed_files.outputs['event-kind-backend'] == 'true' }}
     steps:
       - uses: actions/checkout@v4
-
-    #   - name: Use Node.js ${{ env.NODE_VERSION }}
-    #     uses: actions/setup-node@v4
-    #     with:
-    #       node-version: ${{ env.NODE_VERSION }}
-    #       cache: yarn
-
-    #   - name: Install yarn 2
-    #     run: npm install -g yarn@berry
-
-    #   - name: Install dependencies
-    #     run: yarn install --immutable
-
-    #   - name: Build type declarations
-    #     run: yarn tsc
-
-    #   - name: Build packages
-    #     run: yarn backstage-cli repo build
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
+      - name: Install yarn 2
+        run: npm install -g yarn@berry
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Build type declarations
+        run: yarn tsc
+      - name: Build packages
+        run: yarn backstage-cli repo build
 
   changed_files:
     runs-on: ubuntu-latest
@@ -71,11 +68,6 @@ jobs:
         run: |
           PACKAGE_NAME=$(jq -r ".name" plugins/${{ matrix.plugin }}/package.json)
           echo "Publishing $PACKAGE_NAME"
-          # yarn workspace $PACKAGE_NAME npm publish
+          yarn workspace $PACKAGE_NAME npm publish
         env:
           YARN_NPM_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Debug Output
-        run: |
-          echo "Matrix plugin: ${{ matrix.plugin }}"
-          echo "Changed files output: ${{ needs.changed_files.outputs[matrix.plugin] }}"
