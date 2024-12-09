@@ -35,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       event-details: ${{ steps.changed-plugins-files.outputs.details_any_changed }}
-      event-backend: ${{ steps.changed-plugins-files.outputs.kind-backend_any_changed }}
+      event-kind-backend: ${{ steps.changed-plugins-files.outputs.kind-backend_any_changed }}
 
     name: Test changed-files
     steps:
