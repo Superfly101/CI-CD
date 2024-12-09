@@ -1,4 +1,4 @@
-name: Publish packages to GitHub Packages
+name: New Publish packages to GitHub Packages
 
 on:
   push:
@@ -66,7 +66,7 @@ jobs:
         plugin: [event-details, event-kind-backend]
     steps:
       - name: Publish package
-        if: ${{ format('needs.changed_files.outputs.{0}_changed', matrix.plugin) == 'true' }}
+        if: needs.changed_files.outputs[format('{0}', matrix.plugin)] == 'true'
         run: |
           PACKAGE_NAME=$(jq -r ".name" plugins/${{ matrix.plugin }}/package.json)
           echo "Publishing $PACKAGE_NAME"
