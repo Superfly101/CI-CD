@@ -65,8 +65,9 @@ jobs:
       matrix:
         plugin: [event-details, event-kind-backend]
     steps:
+      - uses: actions/checkout@v4
       - name: Publish package
-        if: needs.changed_files.outputs[format('{0}', matrix.plugin)] == 'true'
+        # if: needs.changed_files.outputs[format('{0}', matrix.plugin)] == 'true'
         run: |
           PACKAGE_NAME=$(jq -r ".name" plugins/${{ matrix.plugin }}/package.json)
           echo "Publishing $PACKAGE_NAME"
