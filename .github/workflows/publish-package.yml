@@ -2,7 +2,7 @@ name: Publish packages to GitHub Packages
 
 on:
   push:
-    branches: [feature/3582-Backstage-GitHubActions]
+    branches: [main]
 
 env:
   NODE_VERSION: 18.x
@@ -14,8 +14,6 @@ jobs:
     outputs:
       event-details: ${{ steps.changed-plugins-files.outputs.details_any_changed }}
       event-backend: ${{ steps.changed-plugins-files.outputs.kind-backend_any_changed }}
-      catalog-filters: ${{ steps.changed-plugins-files.outputs.kind-backend_any_changed }}
-      catalog-table: ${{ steps.changed-plugins-files.outputs.kind-backend_any_changed }}
 
     name: Test changed-files
     steps:
@@ -43,23 +41,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: yarn
+      # - name: Use Node.js ${{ env.NODE_VERSION }}
+      #   uses: actions/setup-node@v4
+      #   with:
+      #     node-version: ${{ env.NODE_VERSION }}
+      #     cache: yarn
 
-      - name: Install yarn 2
-        run: npm install -g yarn@berry
+      # - name: Install yarn 2
+      #   run: npm install -g yarn@berry
 
-      - name: Install dependencies
-        run: yarn install --immutable
+      # - name: Install dependencies
+      #   run: yarn install --immutable
 
-      - name: Build type declarations
-        run: yarn tsc
+      # - name: Build type declarations
+      #   run: yarn tsc
 
-      - name: Build packages
-        run: yarn backstage-cli repo build
+      # - name: Build packages
+      #   run: yarn backstage-cli repo build
 
       - name: Publish changed packages in parallel
         run: |
@@ -76,7 +74,8 @@ jobs:
                 exit 0
               fi
               
-              yarn workspace $PACKAGE_NAME npm publish
+              echo "Publishing $plugin"
+              # yarn workspace $PACKAGE_NAME npm publish
             ) &
             
             pids+=($!)
